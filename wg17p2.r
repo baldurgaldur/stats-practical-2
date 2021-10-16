@@ -21,3 +21,9 @@ x[1:10] <- 1
 
 #STorage for pop in each stage for 100 days
 S <- E <- I <- R <- rep(0, 100)
+
+#set up vector of beta and states
+states <- matrix(c(beta_prob, rep(0, n)), n, 2)
+states[1:10, 2] <- 1
+
+                 
