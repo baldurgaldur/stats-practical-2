@@ -17,26 +17,25 @@ pass_one_day <- function(pop_states, daily_state_changes, lambda, i) {
     print(c("No of infected ppl ", infected_at_start))
     print(c("No of removed ppl ", removed_at_start))
 
-    random <- runif(n = nrow(pop_states))
-    # If we do not do this in "reverse", ie resolve the later states first,
-    # we run the risk of a person going over more than one state in a single day
-    pop_states[, "state" == 2 & random < p_leaving_infected] <- 3
-    pop_states[, "state" == 1 & random < p_leaving_exposed] <- 2
-    
-
-    # Because individuals do not immediately enter the infected state,
-    # we can use the same no_of_infected for each person.
-    # One could argue that we should use mean of infected at beginning and infected at end of day.
-    # I chose beginning here.
-
-    #TODO: SUM the betas of the infected instead of counting infected
+    #calculate the probability of person j moving into the exposed state
     infected_beta_sum <- sum(pop_states$beta[pop_states["state"] == 2]) * lambda
     print(c("infected beta sum", infected_beta_sum))
     infection_prob <- pop_states[, "beta"] * infected_beta_sum
-    pop_states[, "state" == 0 & random < infection_prob] <- 1
 
-    removed_at_end <- sum(pop_states["state"] == 3)
-    infected_at_end <- sum(pop_states["state"] == 2)
+    #3 vectors of binomal realisations (S->E, E-> I and I->R) to determine whether an individual moves into the next state
+    #the vector of interest for each individual is determined by which state they are already in
+    now_removed <- rbinom(pop_size, 1, p_leaving_infected) * (pop_states == 2)
+    now_infected <- rbinom(pop_size, 1, p_leaving_exposed) * (pop_states == 1)
+    now_exposed <- rbinom(pop_size, 1, infection_prob) * (pop_states == 0)
+
+    #sum the 3 vectors to determine which individuals will move up a state
+    moving_states <- now_exposed + now_infected + now_removed
+    
+    #the new states of each individual
+    pop_states[,1] <- pop_states[,1] + moving_states
+
+    removed_at_end <- sum(pop_states[,1] == 3)
+    infected_at_end <- sum(pop_states[,1] == 2)
 
     removed_today <- removed_at_end - removed_at_start
     print(c("Removed today", removed_today))
@@ -45,6 +44,9 @@ pass_one_day <- function(pop_states, daily_state_changes, lambda, i) {
     # This is not very R, find a way to set the whole row
     daily_state_changes[i, 1] <- infected_today
     daily_state_changes[i, 2] <- removed_today
+    print(daily_state_changes)
+
+    #return(list(pop_states, daily_state_changes))
 }
 
 ## Constants
@@ -66,24 +68,35 @@ starting_exposed <- sample(1:pop_size, 10)
 pop_states[starting_exposed, "state"] <- 1
 
 daily_state_changes <- matrix(nrow = simulation_days, ncol = 2)
-for (i in 1:simulation_days) {
-   pass_one_day(pop_states, daily_state_changes, lambda, i)
-}
 
-str(daily_state_changes)
-print(daily_state_changes)
+# whole_simulation <- function(initial_pop_states, intial_daily_state_changes, lambda, i, simulation_days){
+#     new_pop_states <- initial_pop_states
+#     new_daily_state_changes <- initial_daily_state_changes
+#     for (i in 1:simulation_days) {
+#     new_pop_states, new_daily_state_changes <- pass_one_day(new_pop_states, new_daily_state_changes, lambda, i)
+#     }
+# }
+
+
+for (i in 1:simulation_days) {
+    pass_one_day(pop_states, daily_state_changes, lambda, i)
+    
+    }
+
+# str(daily_state_changes)
+# print(daily_state_changes)
 # simulation_days are over. Report
 
 
-gamma <- 1.4 / n # = daily prob of going from S to E
-delta <- 1 / 3 # = daily prob of going from E to I
-theta <- 1 / 5 # = daily prob of going from I to R
+# gamma <- 1.4 / n # = daily prob of going from S to E
+# delta <- 1 / 3 # = daily prob of going from E to I
+# theta <- 1 / 5 # = daily prob of going from I to R
 
-#STorage for pop in each stage for 100 days
-S <- E <- I <- R <- rep(0, 100)
+# #STorage for pop in each stage for 100 days
+# S <- E <- I <- R <- rep(0, 100)
 
-#set up vector of beta and states
-states <- matrix(c(beta_prob, rep(0, n)), n, 2)
-states[1:10, 2] <- 1
+# #set up vector of beta and states
+# states <- matrix(c(beta_prob, rep(0, n)), n, 2)
+# states[1:10, 2] <- 1
 
                  
