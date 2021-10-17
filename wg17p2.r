@@ -17,12 +17,12 @@ pass_one_day <- function(pop_states, daily_state_changes, lambda, i) {
     print(c("No of infected ppl ", infected_at_start))
     print(c("No of removed ppl ", removed_at_start))
 
-    random <- runif(n = length(pop_states))
-
+    random <- runif(n = nrow(pop_states))
     # If we do not do this in "reverse", ie resolve the later states first,
     # we run the risk of a person going over more than one state in a single day
     pop_states[, "state" == 2 & random < p_leaving_infected] <- 3
     pop_states[, "state" == 1 & random < p_leaving_exposed] <- 2
+    
 
     # Because individuals do not immediately enter the infected state,
     # we can use the same no_of_infected for each person.
