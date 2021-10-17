@@ -30,7 +30,7 @@ pass_one_day <- function(pop_states, daily_state_changes, lambda, i) {
     # I chose beginning here.
 
     #TODO: SUM the betas of the infected instead of counting infected
-    infected_beta_sum <- sum(pop_states["state"] == 2) * lambda * infected_at_start
+    infected_beta_sum <- sum(pop_states$beta[pop_states["state"] == 2]) * lambda
     print(c("infected beta sum", infected_beta_sum))
     infection_prob <- pop_states[, "beta"] * infected_beta_sum
     pop_states[, "state" == 0 & random < infection_prob] <- 1
@@ -78,12 +78,6 @@ print(daily_state_changes)
 gamma <- 1.4 / n # = daily prob of going from S to E
 delta <- 1 / 3 # = daily prob of going from E to I
 theta <- 1 / 5 # = daily prob of going from I to R
-
-#initialize suceptibles
-x <- rep(0, n)
-
-#create 10 exposed
-x[1:10] <- 1
 
 #STorage for pop in each stage for 100 days
 S <- E <- I <- R <- rep(0, 100)
