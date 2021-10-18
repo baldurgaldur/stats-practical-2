@@ -83,14 +83,14 @@ daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 
 for (i in 1:simulation_days) {
     new_states <- update_states(pop_states, lambda, i)
-    #daily_state_changes <- calc_state_canges(pop_states, new_states, i)
+    #daily_state_changes <- calc_state_changes(pop_states, new_states, i)
     pop_states <- new_states
 }
 
 print(c("done: ", daily_state_changes))
 
 #TODO: Do this
-calc_state_canges <- function(pop_states, new_pop, daily_state_changes, i) {
+calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
     removed_yesterday <- sum(pop_states["state"] == 3)
     infected_yesterday <- sum(pop_states["state"] == 2)
 
