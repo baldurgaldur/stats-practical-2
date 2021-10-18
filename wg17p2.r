@@ -97,6 +97,7 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
     susceptible <- sum(pop_states["state"] == 0)
     exposed <- sum(pop_states["state"] == 1)
     
+    #is this supposed to be new_pop[, 1] instead of pop_states[, 1]?
     removed_at_end <- sum(pop_states[,1] == 3)
     infected_at_end <- sum(pop_states[,1] == 2)
 
