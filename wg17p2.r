@@ -64,24 +64,18 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
     
     removed_yesterday <- sum(pop_states["state"] == 3)
     infected_yesterday <- sum(pop_states["state"] == 2)
-
-    susceptible <- sum(pop_states["state"] == 0)
-    exposed <- sum(pop_states["state"] == 1)
-    
+ 
     removed_new <- sum(new_pop[,1] == 3)
     infected_new <- sum(new_pop[,1] == 2)
 
-
     difference_in_removed <- removed_new - removed_yesterday
-    print(c("Removed today", difference_in_removed))
 
     new_infections <- (infected_new - infected_yesterday) + difference_in_removed
-    print(c("Infected today", new_infections))
-    
+
     daily_state_changes[i, 1] <- new_infections
     daily_state_changes[i, 2] <- difference_in_removed
-    
-    
+
+    daily_state_changes
 }
 
 # An appropriate data structure to monitor each person is a data frame.
@@ -96,12 +90,14 @@ pop_states[starting_exposed, "state"] <- 1
 
 daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 
-system.time(
-for (i in 1:simulation_days) {
-    new_states <- update_states(pop_states, lambda, i)
-    #daily_state_changes <- calc_state_changes(pop_states, new_states, i)
+print(system.time(for (i in 1:simulation_days) {
+    print(system.time(new_states <- update_states(pop_states, lambda, i)))
+    print("one day time above")
+    if (i > 1) {
+        daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i)
+    }
     pop_states <- new_states
-})
+}))
 
+print(daily_state_changes)
 print("Pandemic over")
-report(pop_states$state, 100)
