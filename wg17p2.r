@@ -46,6 +46,31 @@ update_states <- function(pop_states, lambda, i) {
     data.frame(state = new_states, beta = pop_states$beta)
 }
 
+#TODO: Do this
+calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
+    
+    removed_yesterday <- sum(pop_states["state"] == 3)
+    infected_yesterday <- sum(pop_states["state"] == 2)
+
+    susceptible <- sum(pop_states["state"] == 0)
+    exposed <- sum(pop_states["state"] == 1)
+    
+    removed_new <- sum(new_pop[,1] == 3)
+    infected_new <- sum(new_pop[,1] == 2)
+
+
+    difference_in_removed <- removed_new - removed_yesterday
+    print(c("Removed today", difference_in_removed))
+
+    new_infections <- (infected_new - infected_yesterday) + difference_in_removed
+    print(c("Infected today", new_infections))
+    
+    daily_state_changes[i, 1] <- new_infections
+    daily_state_changes[i, 2] <- difference_in_removed
+    
+    
+}
+
 
 ## Constants
 # Population of Scotland
@@ -71,29 +96,7 @@ for (i in 1:simulation_days) {
     print(system.time(new_states <- update_states(pop_states, lambda, i)))
     print("one day time above")
     #daily_state_changes <- calc_state_changes(pop_states, new_states, i)
-    pop_states <- new_states
+    pop_states <- new_states 
 }
 
 print("Pandemic over")
-
-#TODO: Do this
-calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
-    removed_yesterday <- sum(pop_states["state"] == 3)
-    infected_yesterday <- sum(pop_states["state"] == 2)
-
-    susceptible <- sum(pop_states["state"] == 0)
-    exposed <- sum(pop_states["state"] == 1)
-    
-    #is this supposed to be new_pop[, 1] instead of pop_states[, 1]?
-    removed_at_end <- sum(pop_states[,1] == 3)
-    infected_at_end <- sum(pop_states[,1] == 2)
-
-
-    removed_today <- removed_at_end - removed_at_start
-    print(c("Removed today", removed_today))
-
-    infected_today <- (infected_at_end - infected_at_start) + removed_today
-    print(c("Infected today", infected_today))
-    
-    daily_state_changes[i, ] <- c(infected_today, removed_today)
-}
