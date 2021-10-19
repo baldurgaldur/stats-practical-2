@@ -22,6 +22,7 @@ update_states <- function(pop_states, lambda, i) {
     print(c("No of infected ppl ", infected_at_start))
     print(c("No of removed ppl ", removed_at_start))
 
+
     #calculate the probability of person j moving into the exposed state
     infected_beta_sum <- sum(pop_states$beta[pop_states["state"] == 2]) * lambda
     #print(c("infected beta sum", infected_beta_sum))
@@ -41,6 +42,7 @@ update_states <- function(pop_states, lambda, i) {
 
     #the new states of each individual
     new_states <- moving_states + pop_states$state
+
     print("Who is exposed after run")
     print(which(new_states == 1))
     print("Who is infected after run")
@@ -49,6 +51,31 @@ update_states <- function(pop_states, lambda, i) {
     print(which(new_states == 3))
 
     data.frame(state = new_states, beta = pop_states$beta)
+}
+
+#TODO: Do this
+calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
+    
+    removed_yesterday <- sum(pop_states["state"] == 3)
+    infected_yesterday <- sum(pop_states["state"] == 2)
+
+    susceptible <- sum(pop_states["state"] == 0)
+    exposed <- sum(pop_states["state"] == 1)
+    
+    removed_new <- sum(new_pop[,1] == 3)
+    infected_new <- sum(new_pop[,1] == 2)
+
+
+    difference_in_removed <- removed_new - removed_yesterday
+    print(c("Removed today", difference_in_removed))
+
+    new_infections <- (infected_new - infected_yesterday) + difference_in_removed
+    print(c("Infected today", new_infections))
+    
+    daily_state_changes[i, 1] <- new_infections
+    daily_state_changes[i, 2] <- difference_in_removed
+    
+    
 }
 
 
@@ -70,6 +97,7 @@ pop_states <- data.frame(state = rep(0, pop_size), beta = beta_prob)
 starting_exposed <- sample(1:pop_size, 10)
 pop_states[starting_exposed, "state"] <- 1
 
+
 daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 
 # whole_simulation <- function(initial_pop_states, intial_daily_state_changes, lambda, i, simulation_days){
@@ -80,33 +108,18 @@ daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 #     }
 # }
 
+#run this once for day 1
+new_states <- update_states(pop_states, lambda, 1)
 
-for (i in 1:simulation_days) {
+#daily_state changes only begins on day 2
+for (i in 2:simulation_days) {
+    
     new_states <- update_states(pop_states, lambda, i)
-    #daily_state_changes <- calc_state_changes(pop_states, new_states, i)
+    
+    calc_state_changes(pop_states, new_states, daily_state_changes, i)
     pop_states <- new_states
+    
 }
 
 print(c("done: ", daily_state_changes))
 
-#TODO: Do this
-calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
-    removed_yesterday <- sum(pop_states["state"] == 3)
-    infected_yesterday <- sum(pop_states["state"] == 2)
-
-    susceptible <- sum(pop_states["state"] == 0)
-    exposed <- sum(pop_states["state"] == 1)
-    
-    #is this supposed to be new_pop[, 1] instead of pop_states[, 1]?
-    removed_at_end <- sum(pop_states[,1] == 3)
-    infected_at_end <- sum(pop_states[,1] == 2)
-
-
-    removed_today <- removed_at_end - removed_at_start
-    print(c("Removed today", removed_today))
-
-    infected_today <- (infected_at_end - infected_at_start) + removed_today
-    print(c("Infected today", infected_today))
-    
-    daily_state_changes[i, ] <- c(infected_today, removed_today)
-}
