@@ -68,6 +68,7 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
     daily_state_changes[i, 1] <- new_infections
     daily_state_changes[i, 2] <- difference_in_removed
     
+    daily_state_changes
     
 }
 
@@ -75,7 +76,7 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
 ## Constants
 # Population of Scotland
 pop_size <- 5500000
-simulation_days <- 3
+simulation_days <- 10
 lambda <- 0.4 / pop_size
 beta <- rlnorm(pop_size, 0, 0.5)
 beta_prob <- beta / mean(beta)
@@ -96,9 +97,12 @@ for (i in 1:simulation_days) {
     print(system.time(new_states <- update_states(pop_states, lambda, i)))
     print("one day time above")
     if (i > 1){
-        calc_state_changes(pop_states, new_states, daily_state_changes, i)
+        daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i)
+        
     }
     pop_states <- new_states 
+    
 }
 
+print(daily_state_changes)
 print("Pandemic over")
