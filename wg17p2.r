@@ -95,7 +95,9 @@ daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 for (i in 1:simulation_days) {
     print(system.time(new_states <- update_states(pop_states, lambda, i)))
     print("one day time above")
-    #daily_state_changes <- calc_state_changes(pop_states, new_states, i)
+    if (i > 1){
+        calc_state_changes(pop_states, new_states, daily_state_changes, i)
+    }
     pop_states <- new_states 
 }
 
