@@ -64,7 +64,7 @@ update_states <- function(pop_states, lambda, i) {
     moving_states <- now_exposed + now_infected + now_removed
 
     new_states <- moving_states + pop_states$state
-    data.frame(state = new_states, beta = pop_states$beta)
+    data.frame(state = new_states, beta = pop_states$beta, rand = pop_states$rand)
 }
 
 #TODO: Do this
