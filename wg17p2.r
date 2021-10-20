@@ -27,6 +27,10 @@ beta_prob <- beta / mean(beta)
 p_leaving_infected <- 1 / 5
 p_leaving_exposed <- 1 / 3
 
+ordered_beta <- sort(beta_prob)
+cautious_beta <- ordered_beta[c(1: pop_size/10)]
+cautious_index <- match(cautious_beta, beta_prob)
+
 update_states <- function(pop_states, lambda, i) {
     # One day in our model goes by.
     # Each row in population_states represent an individual in our model
@@ -62,12 +66,12 @@ update_states <- function(pop_states, lambda, i) {
 #TODO: Do this
 calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
     
-    removed_yesterday <- sum(pop_states["state"] == 3)
-    infected_yesterday <- sum(pop_states["state"] == 2)
- 
+    removed_yesterday <- sum(pop_states$state == 3)
+    infected_yesterday <- sum(pop_states$state == 2)
+    
     removed_new <- sum(new_pop[,1] == 3)
     infected_new <- sum(new_pop[,1] == 2)
-
+    
     difference_in_removed <- removed_new - removed_yesterday
 
     new_infections <- (infected_new - infected_yesterday) + difference_in_removed
@@ -82,22 +86,44 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i) {
 # It has the "state" column and the "beta" column corresponding to a single
 # individuals _current_ state and beta value. The states in our model are:
 # 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
-pop_states <- data.frame(state = rep(0, pop_size), beta = beta_prob)
+pop_states <- data.frame(state = rep(0, pop_size), beta = beta_prob, rand = sample(1:pop_size, 1))
 
 # Prime the model by choosing 10 random ppl to be exposed
 starting_exposed <- sample(1:pop_size, 10)
 pop_states[starting_exposed, "state"] <- 1
 
+
+max_beta <- ordered_beta[pop_size/10]
+max_rand <- pop_size/100
+
+#creates data frames for state_changes for the 3 population samples
 daily_state_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
+cautious_daily_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
+random_samp_changes <- matrix(data = 0, nrow = simulation_days, ncol = 2)
 
 print(system.time(for (i in 1:simulation_days) {
     print(system.time(new_states <- update_states(pop_states, lambda, i)))
     print("one day time above")
     if (i > 1) {
         daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i)
+
+        #finds the cautious people in pop_states and new_states
+        cautious_pop <- pop_states[pop_states$beta <= max_beta,]
+        cautious_new <- new_states[pop_states$beta <= max_beta,]
+
+        cautious_daily_changes <- calc_state_changes(cautious_pop, cautious_new, cautious_daily_changes, i)
+
+        #finds people in the random 0.1% sample
+        rand_pop <- pop_states[pop_states$rand <= max_rand,]
+        rand_new <- new_states[new_states$rand <= max_rand,]
+
+        random_daily_changes <- calc_state_changes(rand_pop, rand_new, random_samp_changes, i)
     }
     pop_states <- new_states
+    
 }))
 
 print(daily_state_changes)
+print(cautious_daily_changes)
+print(random_daily_changes)
 print("Pandemic over")
