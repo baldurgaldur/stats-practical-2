@@ -36,7 +36,8 @@ update_states <- function(pop_states, lambda, i) {
     #report(pop_states$state, i))
 
     #calculate the probability of person j moving into the exposed state
-    infected_beta_sum <- sum(pop_states$beta[pop_states["state"] == 2]) * lambda
+    infected_beta_sum <- sum(pop_states$beta[pop_states$state == 2]) * lambda
+
     infection_prob <- pop_states$beta * infected_beta_sum
 
     # We could random fewer and put them in the right place
