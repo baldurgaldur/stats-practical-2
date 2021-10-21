@@ -95,13 +95,13 @@ for (j in 1:1){
         
         new_states <- update_states(pop_states, lambda, i)
 
-        # daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i, pop_size)
+        daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i, pop_size)
 
-        # #finds the cautious people in pop_states and new_states
-        # cautious_pop <- pop_states[pop_states$beta <= max_beta,]
-        # cautious_new <- new_states[pop_states$beta <= max_beta,]
+        #finds the cautious people in pop_states and new_states
+        cautious_pop <- pop_states[pop_states$beta <= max_beta,]
+        cautious_new <- new_states[pop_states$beta <= max_beta,]
 
-        # cautious_daily_changes <- calc_state_changes(cautious_pop, cautious_new, cautious_daily_changes, i, cautious_pop_size)
+        cautious_daily_changes <- calc_state_changes(cautious_pop, cautious_new, cautious_daily_changes, i, cautious_pop_size)
 
         #finds people in the random 0.1% sample
     
