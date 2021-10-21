@@ -43,7 +43,7 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_
     daily_state_changes[i, 2] <- removed_today
     daily_state_changes[i, 3] <- new_infections
     daily_state_changes[i, 4] <- total_infections
-
+    
     daily_state_changes
 }
 
@@ -69,11 +69,11 @@ cautious_index <- match(cautious_beta, beta_prob)
 max_beta <- ordered_beta[pop_size/10]
 
 #to find a 0.1% random sample we choose people with index lower than this value 
-max_rand <- pop_size/1000
+max_rand <- rand_pop_size
 
 ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days/10)
  
-for (j in 1:10){
+for (j in 1:1){
 
     print(j)
     # 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
@@ -95,20 +95,20 @@ for (j in 1:10){
         
         new_states <- update_states(pop_states, lambda, i)
 
-        daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i, pop_size)
+        # daily_state_changes <- calc_state_changes(pop_states, new_states, daily_state_changes, i, pop_size)
 
-        #finds the cautious people in pop_states and new_states
-        cautious_pop <- pop_states[pop_states$beta <= max_beta,]
-        cautious_new <- new_states[pop_states$beta <= max_beta,]
+        # #finds the cautious people in pop_states and new_states
+        # cautious_pop <- pop_states[pop_states$beta <= max_beta,]
+        # cautious_new <- new_states[pop_states$beta <= max_beta,]
 
-        cautious_daily_changes <- calc_state_changes(cautious_pop, cautious_new, cautious_daily_changes, i, cautious_pop_size)
+        # cautious_daily_changes <- calc_state_changes(cautious_pop, cautious_new, cautious_daily_changes, i, cautious_pop_size)
 
         #finds people in the random 0.1% sample
     
         rand_pop <- pop_states[pop_states$rand <= max_rand,]
         rand_new <- new_states[new_states$rand <= max_rand,]
-
-        random_daily_changes <- calc_state_changes(rand_pop, rand_new, random_samp_changes, i, rand_pop_size)
+        
+        random_samp_changes <- calc_state_changes(rand_pop, rand_new, random_samp_changes, i, rand_pop_size)
         
         pop_states <- new_states
         
@@ -120,14 +120,16 @@ for (j in 1:10){
     
 }
 
+
+
 max_daily_state_changes <- max(daily_state_changes[,4])
 day_max_daily <- which(daily_state_changes[,4] == max_daily_state_changes)
 
 max_cautious_daily_changes <- max(cautious_daily_changes[,4])
 day_max_cautious <- which(cautious_daily_changes[,4] == max_cautious_daily_changes)
 
-max_random_daily_changes <- max(random_daily_changes[,4])
-day_max_random <- which(random_daily_changes[,4] == max_random_daily_changes)
+max_random_samp_changes <- max(random_samp_changes[,4])
+day_max_random <- which(random_samp_changes[,4] == max_random_samp_changes)
 
 #legend and labels v ugly will fix !
 plot(1:simulation_days, daily_state_changes[,4], type="l", xlab = "days", ylab = "New Infections", ylim = c(0,max_daily_state_changes), col = 1, cex = 10)
@@ -139,8 +141,8 @@ lines(cautious_daily_changes[,4], col = 2)
 points(day_max_cautious, max_cautious_daily_changes, pch = 19, col = 2)
 text(day_max_cautious, max_cautious_daily_changes, labels = paste("(", day_max_cautious, ",", max_cautious_daily_changes, ")"), pos = 4, cex = 0.5)
 
-lines(random_daily_changes[,4], col = 3)
-points(day_max_random, max_random_daily_changes, pch = 19, col = 3,)
-text(day_max_random, max_random_daily_changes, labels = paste("(", day_max_random, ",", max_random_daily_changes, ")"), pos = 4, cex = 0.5)
+lines(random_samp_changes[,4], col = 3)
+points(day_max_random, max_random_samp_changes, pch = 19, col = 3,)
+text(day_max_random, max_random_samp_changes, labels = paste("(", day_max_random, ",", max_random_samp_changes, ")"), pos = 4, cex = 0.5)
 
 print(ten_simulations)
