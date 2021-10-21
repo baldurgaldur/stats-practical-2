@@ -1,33 +1,11 @@
 # 17 Ava Napper, Baldur Björnsson, Madeleine Reid
 # https://github.com/baldurgaldur/stats-practical-2
 
-
-#do we need this report function anymore?
-# report <- function(state_vector, day) {
-#     removed_at_start <- sum(state_vector == 3)
-#     infected_at_start <- sum(state_vector == 2)
-#     susceptible <- sum(state_vector == 0)
-#     exposed <- sum(state_vector == 1)
-#     print(c("No of susceptible ppl ", susceptible, "at beginning of day: ", i))
-#     print(c("No of exposed ppl ", exposed))
-#     print(c("No of infected ppl ", infected_at_start))
-#     print(c("No of removed ppl ", removed_at_start))
-# 
-#     #print("who is exposed?")
-#     #print(which(pop_states["state"] == 1))
-#     #print("who is infected?")
-#     #print(which(pop_states["state"] == 2))
-# }
-
-
-
 update_states <- function(pop_states, lambda, i) {
     # One day in our model goes by.
     # Each row in population_states represent an individual in our model
     # Each row in daily_state_changes is the difference how many individuals
     # were in that state between the start of the day and the end of the day.
-
-    #report(pop_states$state, i))
 
     #calculate the probability of person j moving into the exposed state
     infected_beta_sum <- sum(pop_states$beta[pop_states$state == 2]) * lambda
@@ -37,11 +15,6 @@ update_states <- function(pop_states, lambda, i) {
     # We could random fewer and put them in the right place
     # Eg. no point in randoming for all the ppl in the removed state
     rand <- runif(pop_size)
-
-    #need_rand <- pop_states$state != 3
-    #rand_vals <- runif(length(need_rand))
-    #concise_rand <- rep(1, nrow(pop_states))
-    #concise_rand[need_rand] <- rand_vals
 
     now_removed <- pop_states$state == 2 & rand < p_leaving_infected
     now_infected <- pop_states$state == 1 & rand < p_leaving_exposed
@@ -54,7 +27,6 @@ update_states <- function(pop_states, lambda, i) {
     data.frame(state = new_states, beta = pop_states$beta, rand = pop_states$rand)
 }
 
-#TODO: Do this
 calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_size) {
     
     susceptible_yesterday <- sum(pop_states$state == 0)
@@ -80,6 +52,7 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_
 pop_size <- 5500000
 cautious_pop_size <- pop_size/10
 rand_pop_size <- pop_size/1000
+
 simulation_days <- 160
 lambda <- 0.4 / pop_size
 beta <- rlnorm(pop_size, 0, 0.5)
@@ -92,7 +65,10 @@ ordered_beta <- sort(beta_prob)
 cautious_beta <- ordered_beta[c(1: pop_size/10)]
 cautious_index <- match(cautious_beta, beta_prob)
 
+#finds the cut off beta value, we only want people with betas lower than this value
 max_beta <- ordered_beta[pop_size/10]
+
+#to find a 0.1% random sample we choose people with index lower than this value 
 max_rand <- pop_size/1000
 
 ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days/10)
@@ -100,9 +76,6 @@ ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days/10)
 for (j in 1:10){
 
     print(j)
-    # An appropriate data structure to monitor each person is a data frame.
-    # It has the "state" column and the "beta" column corresponding to a single
-    # individuals _current_ state and beta value. The states in our model are:
     # 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
     random <- sample(c(1:pop_size), pop_size, replace= FALSE)
 
@@ -118,7 +91,7 @@ for (j in 1:10){
     cautious_daily_changes <- matrix(data = 0, nrow = simulation_days, ncol = 4)
     random_samp_changes <- matrix(data = 0, nrow = simulation_days, ncol = 4)
 
-    print(system.time(for (i in 1:simulation_days) {
+    for (i in 1:simulation_days) {
         
         new_states <- update_states(pop_states, lambda, i)
 
@@ -143,15 +116,7 @@ for (j in 1:10){
             ten_simulations[j, i/10] <- daily_state_changes[i, 4]
         }
         
-    }))
-
-
-
-    print('above is time for whole program')
-    print(daily_state_changes)
-    # print(cautious_daily_changes)
-    # print(random_daily_changes)
-    print("Pandemic over")
+    }
     
 }
 
