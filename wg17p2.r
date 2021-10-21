@@ -1,14 +1,16 @@
 # 17 Ava Napper, Baldur Björnsson, Madeleine Reid
 # https://github.com/baldurgaldur/stats-practical-2
 
-update_states <- function(pop_states, lambda, p_leaving_infected, p_leaving_exposed, i) {
-    #Purpose: to update the state of each individual after the model has run for 1 
-    #Input: data frame of which state each individual is in, before the model has ran
-    #       overall viral infectivity parameter
-    #       probability of leaving the infected state on a given day
-    #       probability of leaving the exposed state on a given day
-    #       day of the simulation
-    #Output: updated data frame of the state each individual is in
+update_states <- function(pop_states, lambda, p_leaving_infected, p_leaving_exposed) {
+    #Purpose:   To update the state of each individual after the model has
+    #           run for 1 day
+    #Input:     Data frame of state each individual is in and his beta value.
+    #           Overall viral infectivity parameter
+    #           Probability of leaving the infected state on a given day
+    #           Probability of leaving the exposed state on a given day
+    #           day of the simulation
+    #Output:    Updated data frame of the state each individual is in when one
+    #           day has passed
 
 
     #calculate the probability of person j moving into the exposed state
@@ -70,7 +72,27 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_
     daily_state_changes
 }
 
+plot_simulation_peaks <- function(value_of_peak, day_of_peak) {
+    # Purpose:  Plot the peaks of each model run
+    #           We plot the day of the peak for each group in one plot
+    #           And in another we plot the percentage of people infected
+    #           at the peak of the model run.
+    # Input:    Two matrices. The columns of each are 1 = Total pop, 
+    #           2 = Cautious 10% and 3 = random 0.1%. Each row is the value 
+    #           corresponding to one run of our model
+    # Output:   Display 2 box plots
+    boxplot(main="Population percentage infected at pandemic peak", xlab = "Groups of people", names=c("Total", "Cautious 10%", "Random 0.1%"), ylab="Percent of population", value_of_peak)
+    boxplot(main="Day when number of infected peaked", xlab = "Groups of people", names=c("Total", "Cautious 10%", "Random 0.1%"), ylab="Day", day_of_peak)
+}
+
 peak_day_and_total_infections <- function(daily_state_changes) {
+    # Purpose:  Extract the greatest value of the infected column within
+    #           the daily state changes. Also extract the day that maximum
+    #           value occurred.
+    # Input:    A matrix where the fourth column represents how many people are
+    #           infected on a given day.
+    # Output:   A vector of length 2. The first entry is the greatest value
+    #           in the infection row and the second is it's index.
 
     greatest_infected_number <- max(daily_state_changes[, 4])
     all_peak_days <- which(daily_state_changes[, 4] == greatest_infected_number)
@@ -82,9 +104,9 @@ peak_day_and_total_infections <- function(daily_state_changes) {
 
 ## Constants
 #the sizes of the 3 population samples we will consider
-pop_size <- 5500000
-cautious_pop_size <- pop_size/10
-rand_pop_size <- pop_size/1000
+pop_size <- 100000
+cautious_pop_size <- pop_size / 10
+rand_pop_size <- pop_size / 1000
 
 simulation_days <- 160
 no_of_runs <- 10
@@ -135,7 +157,7 @@ for (j in 1:no_of_runs) {
 
     for (i in 1:simulation_days) {
         
-        new_states <- update_states(pop_states, lambda, p_leaving_infected, p_leaving_exposed, i)
+        new_states <- update_states(pop_states, lambda, p_leaving_infected, p_leaving_exposed)
 
         #finds the cautious people in pop_states and new_states
         cautious_pop <- pop_states[pop_states$beta <= max_beta,]
@@ -220,4 +242,4 @@ lines(ten_uq/ten_median, col = 3)
 #points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
 #text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
 
-plot(value_of_peak)
+plot_simulation_peaks(value_of_peak, day_of_peak)
