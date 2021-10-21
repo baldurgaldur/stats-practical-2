@@ -70,6 +70,20 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_
     daily_state_changes
 }
 
+# Calculate the maximum number of infections and standardise
+max_infections_scaled <- function(population, states) {
+    max_number_infections <- max(states[,4])
+    max_number_scaled <- round((max_number_infections/population)*100000, digits = 0)
+}
+
+# Calculate the day that the maximum number of infections occur on
+max_day <- function(population, states) {
+    max_number_infections <- max(states[,4])
+    max_number_scaled <- (max_number_infections/population)*100000
+    days_of_max <- which(states[,4] == max_number_infections)
+    avg_days_max <- sum(days_of_max)/length(days_of_max)
+}
+
 ## Constants
 
 #the sizes of the 3 population samples we will consider
@@ -155,33 +169,27 @@ for (j in 1:10){
 }
 
 
+max_daily_scaled <- max_infections_scaled(pop_size, daily_state_changes)
+max_daily_day <- max_day(pop_size, daily_state_changes)
 
-max_daily_state_changes <- max(daily_state_changes[,4])
-max_daily_scaled <- (max_daily_state_changes/pop_size) * 100000
-day_max_daily <- which(daily_state_changes[,4] == max_daily_state_changes)
+max_cautious_scaled <- max_infections_scaled(cautious_pop_size, cautious_daily_changes)
+max_cautious_day <- max_day(cautious_pop_size, cautious_daily_changes)
 
-max_cautious_daily_changes <- max(cautious_daily_changes[,4])
-max_cautious_scaled <- (max_cautious_daily_changes/cautious_pop_size) * 100000
-day_max_cautious <- which(cautious_daily_changes[,4] == max_cautious_daily_changes)
+max_rand_scaled <- max_infections_scaled(rand_pop_size, random_samp_changes)
+max_rand_day <- max_day(rand_pop_size, random_samp_changes)
 
-max_random_samp_changes <- max(random_samp_changes[,4])
-max_rand_scaled <- (max_random_samp_changes/rand_pop_size) * 100000
-day_max_random <- which(random_samp_changes[,4] == max_random_daily_changes)
-
-#legend and labels v ugly will fix !
-plot(1:simulation_days, ((daily_state_changes[,4])/pop_size)*100000, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0,100000), col = 1, cex = 10)
+plot(1:simulation_days, ((daily_state_changes[,4])/pop_size)*100000, type="l", xlab = "Days", ylab = "Daily Infections per 100 000 people", ylim = c(0,max(max_daily_scaled, max_cautious_scaled, max_rand_scaled)+5000), col = 1, cex = 10)
 legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
-points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
-text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
-
+points(max_daily_day, max_daily_scaled, pch = 19, col = 1)
+text(max_daily_day, max_daily_scaled, labels = paste("(", max_daily_day, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5, col = 1)
 
 lines((cautious_daily_changes[,4]/cautious_pop_size)*100000, col = 2)
-points(day_max_cautious, max_cautious_scaled, pch = 19, col = 2)
-text(day_max_cautious, max_cautious_scaled, labels = paste("(", day_max_cautious, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5)
+points(max_cautious_day, max_cautious_scaled, pch = 19, col = 2)
+text(max_cautious_day, max_cautious_scaled, labels = paste("(", max_cautious_day, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5, col = 2)
 
 lines((random_samp_changes[,4]/rand_pop_size)*100000, col = 3)
-points(day_max_random, max_rand_scaled, pch = 19, col = 3,)
-text(day_max_random, max_rand_scaled, labels = paste("(", day_max_random, ",", max_rand_scaled, ")"), pos = 4, cex = 0.5)
+points(max_rand_day, max_rand_scaled, pch = 19, col = 3,)
+text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 0.5, col = 3)
 
 print(ten_simulations)
 
@@ -194,6 +202,7 @@ for (k in 1:simulation_days){
     ten_lq[k] <- quantile(ten_simulations[,k])[2]
     ten_uq[k] <- quantile(ten_simulations[,k])[4]
 }
+
 plot(1:simulation_days, ten_median/ten_median, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0, 5), col = 1, cex = 10)
 lines(ten_lq/ten_median, col = 2)
 lines(ten_uq/ten_median, col = 3)
@@ -201,5 +210,3 @@ lines(ten_uq/ten_median, col = 3)
 #legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
 #points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
 #text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
-
-
