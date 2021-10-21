@@ -107,7 +107,6 @@ for (j in 1:1){
     
         rand_pop <- pop_states[pop_states$rand <= max_rand,]
         rand_new <- new_states[new_states$rand <= max_rand,]
-        
         random_samp_changes <- calc_state_changes(rand_pop, rand_new, random_samp_changes, i, rand_pop_size)
         
         pop_states <- new_states
@@ -123,26 +122,30 @@ for (j in 1:1){
 
 
 max_daily_state_changes <- max(daily_state_changes[,4])
+max_daily_scaled <- (max_daily_state_changes/pop_size) * 100000
 day_max_daily <- which(daily_state_changes[,4] == max_daily_state_changes)
 
 max_cautious_daily_changes <- max(cautious_daily_changes[,4])
+max_cautious_scaled <- (max_cautious_daily_changes/cautious_pop_size) * 100000
 day_max_cautious <- which(cautious_daily_changes[,4] == max_cautious_daily_changes)
 
 max_random_samp_changes <- max(random_samp_changes[,4])
-day_max_random <- which(random_samp_changes[,4] == max_random_samp_changes)
+max_rand_scaled <- (max_random_samp_changes/rand_pop_size) * 100000
+day_max_random <- which(random_samp_changes[,4] == max_random_daily_changes)
 
 #legend and labels v ugly will fix !
-plot(1:simulation_days, daily_state_changes[,4], type="l", xlab = "days", ylab = "New Infections", ylim = c(0,max_daily_state_changes), col = 1, cex = 10)
+plot(1:simulation_days, ((daily_state_changes[,4])/pop_size)*100000, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0,100000), col = 1, cex = 10)
 legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
-points(day_max_daily, max_daily_state_changes, pch = 19, col = 1)
-text(day_max_daily, max_daily_state_changes, labels = paste("(", day_max_daily, ",", max_daily_state_changes, ")"), pos = 4, cex = 0.5)
+points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
+text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
 
-lines(cautious_daily_changes[,4], col = 2)
-points(day_max_cautious, max_cautious_daily_changes, pch = 19, col = 2)
-text(day_max_cautious, max_cautious_daily_changes, labels = paste("(", day_max_cautious, ",", max_cautious_daily_changes, ")"), pos = 4, cex = 0.5)
 
-lines(random_samp_changes[,4], col = 3)
-points(day_max_random, max_random_samp_changes, pch = 19, col = 3,)
-text(day_max_random, max_random_samp_changes, labels = paste("(", day_max_random, ",", max_random_samp_changes, ")"), pos = 4, cex = 0.5)
+lines((cautious_daily_changes[,4]/cautious_pop_size)*100000, col = 2)
+points(day_max_cautious, max_cautious_scaled, pch = 19, col = 2)
+text(day_max_cautious, max_cautious_scaled, labels = paste("(", day_max_cautious, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5)
+
+lines((random_samp_changes[,4]/rand_pop_size)*100000, col = 3)
+points(day_max_random, max_rand_scaled, pch = 19, col = 3,)
+text(day_max_random, max_rand_scaled, labels = paste("(", day_max_random, ",", max_rand_scaled, ")"), pos = 4, cex = 0.5)
 
 print(ten_simulations)
