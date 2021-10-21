@@ -28,17 +28,13 @@ update_states <- function(pop_states, lambda, i) {
 }
 
 calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_size) {
-    
     susceptible_yesterday <- sum(pop_states$state == 0)
-    removed_yesterday <- sum(pop_states$state == 3)
-
     susceptible_today <- sum(new_pop$state == 0)
     removed_today <- sum(new_pop$state == 3)
 
     new_infections <- susceptible_yesterday - susceptible_today
     total_infections <- pop_size - susceptible_today - removed_today
     
-
     daily_state_changes[i, 1] <- susceptible_today
     daily_state_changes[i, 2] <- removed_today
     daily_state_changes[i, 3] <- new_infections
@@ -47,13 +43,24 @@ calc_state_changes <- function(pop_states, new_pop, daily_state_changes, i, pop_
     daily_state_changes
 }
 
+peak_day_and_total_infections <- function(daily_state_changes) {
+
+    greatest_infected_number <- max(daily_state_changes[, 4])
+    all_peak_days <- which(daily_state_changes[, 4] == greatest_infected_number)
+    # When 2 days are the peak, we report the average day. E.g. if day 18 and 19
+    # Have the greatest number of infected, we report day 18.5 to be the max
+    real_day_of_peak <- sum(all_peak_days) / length(all_peak_days)
+    c(greatest_infected_number, real_day_of_peak)
+}
+
 ## Constants
 # Population of Scotland
-pop_size <- 5500000
-cautious_pop_size <- pop_size/10
-rand_pop_size <- pop_size/1000
+pop_size <- 100000
+cautious_pop_size <- pop_size / 10
+rand_pop_size <- pop_size / 1000
 
 simulation_days <- 160
+no_of_runs <- 10
 lambda <- 0.4 / pop_size
 beta <- rlnorm(pop_size, 0, 0.5)
 beta_prob <- beta / mean(beta)
@@ -72,8 +79,10 @@ max_beta <- ordered_beta[pop_size/10]
 max_rand <- rand_pop_size
 
 ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days/10)
+day_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
+value_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
  
-for (j in 1:1){
+for (j in 1:no_of_runs) {
 
     print(j)
     # 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
@@ -116,9 +125,20 @@ for (j in 1:1){
         }
         
     }
-    
-}
 
+    total_pop_peak_data <- peak_day_and_total_infections(daily_state_changes)
+    cautious_pop_peak_data <- peak_day_and_total_infections(cautious_daily_changes)
+    random_pop_peak_data <- peak_day_and_total_infections(random_samp_changes)
+
+    value_of_peak[j, 1] <- total_pop_peak_data[1] / pop_size
+    day_of_peak[j, 1] <- total_pop_peak_data[2]
+
+    value_of_peak[j, 2] <- cautious_pop_peak_data[1] / cautious_pop_size
+    day_of_peak[j, 2] <- cautious_pop_peak_data[2]
+
+    value_of_peak[j, 3] <- random_pop_peak_data[1] / rand_pop_size
+    day_of_peak[j, 3] <- random_pop_peak_data[2]
+}
 
 
 max_daily_state_changes <- max(daily_state_changes[,4])
@@ -131,14 +151,13 @@ day_max_cautious <- which(cautious_daily_changes[,4] == max_cautious_daily_chang
 
 max_random_samp_changes <- max(random_samp_changes[,4])
 max_rand_scaled <- (max_random_samp_changes/rand_pop_size) * 100000
-day_max_random <- which(random_samp_changes[,4] == max_random_daily_changes)
+day_max_random <- which(random_samp_changes[,4] == max_random_samp_changes)
 
 #legend and labels v ugly will fix !
 plot(1:simulation_days, ((daily_state_changes[,4])/pop_size)*100000, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0,100000), col = 1, cex = 10)
 legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
 points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
 text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
-
 
 lines((cautious_daily_changes[,4]/cautious_pop_size)*100000, col = 2)
 points(day_max_cautious, max_cautious_scaled, pch = 19, col = 2)
@@ -149,3 +168,8 @@ points(day_max_random, max_rand_scaled, pch = 19, col = 3,)
 text(day_max_random, max_rand_scaled, labels = paste("(", day_max_random, ",", max_rand_scaled, ")"), pos = 4, cex = 0.5)
 
 print(ten_simulations)
+
+print(day_of_peak)
+print(value_of_peak)
+
+boxplot(day_of_peak)
