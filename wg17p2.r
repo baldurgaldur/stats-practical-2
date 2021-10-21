@@ -79,8 +79,8 @@ plot_simulation_peaks <- function(value_of_peak, day_of_peak) {
     #           2 = Cautious 10% and 3 = random 0.1%. Each row is the value
     #           corresponding to one run of our model
     # Output:   Display 2 box plots
-    boxplot(main="Population percentage infected at pandemic peak", xlab = "Groups of people", names=c("Total", "Cautious 10%", "Random 0.1%"), ylab="Percent of population", value_of_peak)
     boxplot(main="Day when number of infected peaked", xlab = "Groups of people", names=c("Total", "Cautious 10%", "Random 0.1%"), ylab="Day", day_of_peak)
+    boxplot(main="Population percentage infected at pandemic peak", xlab = "Groups of people", names=c("Total", "Cautious 10%", "Random 0.1%"), ylab="Percent of population", value_of_peak)
 }
 max_infections_scaled <- function(population, states) {
     # Purpose:  Calculate the maximum number of infections and standardise
@@ -250,4 +250,10 @@ lines(ten_uq / ten_median, col = 3)
 #points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
 #text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
 
+# The difference between the percentage infected at the pandemic peak
+# between the cautious 10% and the total implies that if we had the
+# ZOE app data reporting some number of infections, we know that those
+# people are half as likely to have covid than if you were to randomly
+# sample the pop. This highlights how obviously skewed any statistical inference
+# on the general population would be using the ZOE app data.
 plot_simulation_peaks(value_of_peak, day_of_peak)
