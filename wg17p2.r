@@ -1,21 +1,23 @@
 # 17 Ava Napper, Baldur Björnsson, Madeleine Reid
 # https://github.com/baldurgaldur/stats-practical-2
 
-report <- function(state_vector, day) {
-    removed_at_start <- sum(state_vector == 3)
-    infected_at_start <- sum(state_vector == 2)
-    susceptible <- sum(state_vector == 0)
-    exposed <- sum(state_vector == 1)
-    print(c("No of susceptible ppl ", susceptible, "at beginning of day: ", i))
-    print(c("No of exposed ppl ", exposed))
-    print(c("No of infected ppl ", infected_at_start))
-    print(c("No of removed ppl ", removed_at_start))
 
-    #print("who is exposed?")
-    #print(which(pop_states["state"] == 1))
-    #print("who is infected?")
-    #print(which(pop_states["state"] == 2))
-}
+#do we need this report function anymore?
+# report <- function(state_vector, day) {
+#     removed_at_start <- sum(state_vector == 3)
+#     infected_at_start <- sum(state_vector == 2)
+#     susceptible <- sum(state_vector == 0)
+#     exposed <- sum(state_vector == 1)
+#     print(c("No of susceptible ppl ", susceptible, "at beginning of day: ", i))
+#     print(c("No of exposed ppl ", exposed))
+#     print(c("No of infected ppl ", infected_at_start))
+#     print(c("No of removed ppl ", removed_at_start))
+# 
+#     #print("who is exposed?")
+#     #print(which(pop_states["state"] == 1))
+#     #print("who is infected?")
+#     #print(which(pop_states["state"] == 2))
+# }
 
 
 
@@ -94,7 +96,7 @@ max_beta <- ordered_beta[pop_size/10]
 max_rand <- pop_size/1000
 
 ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days/10)
-
+ 
 for (j in 1:10){
 
     print(j)
@@ -152,5 +154,28 @@ for (j in 1:10){
     print("Pandemic over")
     
 }
+
+max_daily_state_changes <- max(daily_state_changes[,4])
+day_max_daily <- which(daily_state_changes[,4] == max_daily_state_changes)
+
+max_cautious_daily_changes <- max(cautious_daily_changes[,4])
+day_max_cautious <- which(cautious_daily_changes[,4] == max_cautious_daily_changes)
+
+max_random_daily_changes <- max(random_daily_changes[,4])
+day_max_random <- which(random_daily_changes[,4] == max_random_daily_changes)
+
+#legend and labels v ugly will fix !
+plot(1:simulation_days, daily_state_changes[,4], type="l", xlab = "days", ylab = "New Infections", ylim = c(0,max_daily_state_changes), col = 1, cex = 10)
+legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
+points(day_max_daily, max_daily_state_changes, pch = 19, col = 1)
+text(day_max_daily, max_daily_state_changes, labels = paste("(", day_max_daily, ",", max_daily_state_changes, ")"), pos = 4, cex = 0.5)
+
+lines(cautious_daily_changes[,4], col = 2)
+points(day_max_cautious, max_cautious_daily_changes, pch = 19, col = 2)
+text(day_max_cautious, max_cautious_daily_changes, labels = paste("(", day_max_cautious, ",", max_cautious_daily_changes, ")"), pos = 4, cex = 0.5)
+
+lines(random_daily_changes[,4], col = 3)
+points(day_max_random, max_random_daily_changes, pch = 19, col = 3,)
+text(day_max_random, max_random_daily_changes, labels = paste("(", day_max_random, ",", max_random_daily_changes, ")"), pos = 4, cex = 0.5)
 
 print(ten_simulations)
