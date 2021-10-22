@@ -114,7 +114,7 @@ peak_day_and_total_infections <- function(daily_state_changes) {
 
 ## Constants
 # The sizes of the 3 population samples we will consider
-pop_size <- 5500000
+pop_size <- 100000
 cautious_pop_size <- pop_size / 10
 rand_pop_size <- pop_size / 1000
 
@@ -142,9 +142,12 @@ rand_ten_sim <- matrix(data = 0, nrow = 10, ncol = simulation_days)
 
 day_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
 value_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
+
+total_over_cautious_ratio <- vector()
  
 for (j in 1:no_of_runs) {
 
+    print(j)
     # A vector of randomly ordered integers from 1 to the size of the whole population with no repeats
     random <- sample(c(1:pop_size), pop_size, replace = FALSE)
 
@@ -201,6 +204,10 @@ for (j in 1:no_of_runs) {
         rand_ten_sim[j, i] <- random_samp_changes[i, 4]
     }
 
+    # Calculate the ratio between total_infected over cautious_infected
+    ratio <- sum(daily_state_changes[, 4]) / sum(cautious_daily_changes[, 4])
+    total_over_cautious_ratio <- c(total_over_cautious_ratio, ratio)
+
     total_pop_peak_data <- peak_day_and_total_infections(daily_state_changes)
     value_of_peak[j, 1] <- total_pop_peak_data[1] / pop_size
     day_of_peak[j, 1] <- total_pop_peak_data[2]
@@ -214,8 +221,8 @@ for (j in 1:no_of_runs) {
     day_of_peak[j, 3] <- random_pop_peak_data[2]
 }
 
-# Calculate the standardised maximum number of daily infections and the day on which it occurs
-# for all three populations
+# Calculate the standardised maximum number of daily infections and the day
+# on which it occurs for all three populations
 max_daily_scaled <- round(max(standardise(pop_size, daily_state_changes)), digits = 0)
 max_daily_day <- max_day(pop_size, daily_state_changes)
 
@@ -268,11 +275,19 @@ for (k in 1:simulation_days) {
 
 # The difference between the percentage infected at the pandemic peak
 # between the cautious 10% and the total implies that if we had the
-# ZOE app data reporting some number of infections, we know that those
+# ZOE app data reporting some number of infections, those
 # people are half as likely to have covid than if you were to randomly
-# sample the pop. This highlights how obviously skewed any statistical inference
+# sample the pop. This highlights how obviously skewed statistical inference
 # on the general population would be using the ZOE app data.
 plot_simulation_peaks(value_of_peak, day_of_peak)
+
+# Continuing with the ZOE data example, here we plot the ratio between
+# infected cautious people and infected general population.
+# This gives us some way to answer a person that comes and tells us that ZOE is now
+# reporting n number of infections, we respond by saying, well then the total population
+# has about 16.5 x n number of infections. And our confidence in the number 16.5 is 
+# highlighted by the box plot representation
+boxplot(total_over_cautious_ratio, main="Ratio of total infections over cautios infections per simulation")
 
 #day 10, 20 30 etc. of ten_simulations
 #ten_simulations[,seq(10,160,10)]
