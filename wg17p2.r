@@ -125,23 +125,23 @@ plot_trajectory <- function(pop_size, cautious_pop_size, rand_pop_size, state_in
          xlab = "Days", ylab = "Daily Infections per 100 000 people",
          ylim = c(0,max(max_daily_scaled, max_cautious_scaled, max_rand_scaled)+5000),
          main = title, col = 1, cex = 10)
-    legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
+    legend("topleft", legend = c("Total population", "Cautious population", "Random 0.1%"), col = 1:3, lty = 1, cex = 1)
     points(max_daily_day, max_daily_scaled, pch = 19, col = 1)
-    text(max_daily_day, max_daily_scaled, labels = paste("(", max_daily_day, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5, col = 1)
+    text(max_daily_day, max_daily_scaled, labels = paste("(", max_daily_day, ",", max_daily_scaled, ")"), pos = 4, cex = 1, col = 1)
     
     lines(standardise(cautious_pop_size, state_info_cautious_vec), col = 2)
     points(max_cautious_day, max_cautious_scaled, pch = 19, col = 2)
-    text(max_cautious_day, max_cautious_scaled, labels = paste("(", max_cautious_day, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5, col = 2)
+    text(max_cautious_day, max_cautious_scaled, labels = paste("(", max_cautious_day, ",", max_cautious_scaled, ")"), pos = 4, cex = 1, col = 2)
     
     lines(standardise(rand_pop_size, state_info_random_vec), col = 3)
     points(max_rand_day, max_rand_scaled, pch = 19, col = 3,)
-    text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 0.5, col = 3)
+    text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 1, col = 3)
     
 }   
 
 ## Constants
 # The sizes of the 3 population samples we will consider
-pop_size <- 5500000
+pop_size <- 100000
 cautious_pop_size <- pop_size / 10
 rand_pop_size <- pop_size / 1000
 
@@ -247,11 +247,13 @@ plot_trajectory(pop_size, cautious_pop_size, rand_pop_size, state_info_total[, 4
 plot_trajectory(pop_size, cautious_pop_size, rand_pop_size, state_info_total[, 3], state_info_cautious[, 3], state_info_random[, 3], "New Daily Infection Trajectory")
 
 
-#continuous quantiles plot
+# Vector to store median of each day for the n simulations
+# One for each population
 ten_median <- rep(0, simulation_days)
 cautious_median <- rep(0, simulation_days)
 rand_median <- rep(0, simulation_days)
 
+# Storing the median values
 for (k in 1:simulation_days) {
     ten_median[k] <- median(n_sims_total[, k])
     cautious_median[k] <- median(n_sims_cautious[, k])
@@ -259,7 +261,15 @@ for (k in 1:simulation_days) {
 
  }
 
+# Works out the total infections relative to the median of the 10 simulations, at 10 day intervals
+standardised_n_sims <- n_sims_total[,seq(10,160,10)] / ten_median[rep(seq(10,160,10),each = 10)]
+standardised_n_sims_cautious <- n_sims_cautious[,seq(10,160,10)] / cautious_median[rep(seq(10,160,10),each = 10)]
+standardised_n_sims_random <- n_sims_random[,seq(10,160,10)] / rand_median[rep(seq(10,160,10),each = 10)]
 
+# Plots the corresponding boxplots
+boxplot(standardised_n_sims, main = "Variation in total infections over 10 simulations, each 10 days, \n for the whole population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
+boxplot(standardised_n_sims_cautious, main = "Variation in total infections over 10 simulations, each 10 days,\n for the cautious 10% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
+boxplot(standardised_n_sims_random, main = "Variation in total infections over 10 simulations, each 10 days,\n for the random sample of 0.1% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
 
 #write a couple of lines on what the implications of these results might be for interpreting
 #daily infection trajectories reconstructed using the ZOE app data
@@ -285,11 +295,3 @@ plot_simulation_peaks(peak_infection_value, peak_day)
 # highlighted by the box plot representation
 boxplot(total_over_cautious_ratio, main="Ratio of total infections to cautious infections per simulation", ylab = "Average total infections / average cautious total infections")
 
-# Works out the total infections relative to the median of the 10 simulations, at 10 day intervals
-standardised_n_sims <- n_sims_total[,seq(10,160,10)] / ten_median[rep(seq(10,160,10),each = 10)]
-standardised_n_sims_cautious <- n_sims_cautious[,seq(10,160,10)] / cautious_median[rep(seq(10,160,10),each = 10)]
-standardised_n_sims_random <- n_sims_random[,seq(10,160,10)] / rand_median[rep(seq(10,160,10),each = 10)]
-
-boxplot(standardised_n_sims, main = "Variation in total infections over 10 simulations, each 10 days, \n for the whole population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
-boxplot(standardised_n_sims_cautious, main = "Variation in total infections over 10 simulations, each 10 days,\n for the cautious 10% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
-boxplot(standardised_n_sims_random, main = "Variation in total infections over 10 simulations, each 10 days,\n for the random sample of 0.1% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
