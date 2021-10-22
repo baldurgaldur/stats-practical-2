@@ -114,7 +114,7 @@ peak_day_and_total_infections <- function(daily_state_changes) {
 
 ## Constants
 # The sizes of the 3 population samples we will consider
-pop_size <- 100000
+pop_size <- 5500000
 cautious_pop_size <- pop_size / 10
 rand_pop_size <- pop_size / 1000
 
@@ -137,6 +137,8 @@ max_beta <- ordered_beta[pop_size / 10]
 
 # Storage for total infections on each day for each of the 10 simulations
 ten_simulations <- matrix(data = 0, nrow = 10, ncol = simulation_days)
+cautious_ten_sim <- matrix(data = 0, nrow = 10, ncol = simulation_days)
+rand_ten_sim <- matrix(data = 0, nrow = 10, ncol = simulation_days)
 
 day_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
 value_of_peak <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
@@ -191,10 +193,12 @@ for (j in 1:no_of_runs) {
         # Set the states of each individual today, as yesterday's states, ready for the next day of the simulation
         pop_states <- new_states
         
-        # if (i %% 10 == 0){
-        #     ten_simulations[j, i/10] <- daily_state_changes[i, 4]
+        # if (i%%10 == 0){
+        #     ten_simulations[j,i/10] <- daily_state_changes[i,4]
         # }
         ten_simulations[j, i] <- daily_state_changes[i, 4]
+        cautious_ten_sim[j, i] <- cautious_daily_changes[i, 4]
+        rand_ten_sim[j, i] <- random_samp_changes[i, 4]
     }
 
     total_pop_peak_data <- peak_day_and_total_infections(daily_state_changes)
@@ -232,22 +236,42 @@ lines((random_samp_changes[,4]/rand_pop_size)*100000, col = 3)
 points(max_rand_day, max_rand_scaled, pch = 19, col = 3,)
 text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 0.5, col = 3)
 
+
 #continous quantiles plot
 ten_median <- rep(0, simulation_days)
-ten_lq <- rep(0, simulation_days)
-ten_uq <- rep(0, simulation_days)
+cautious_median <- rep(0, simulation_days)
+rand_median <- rep(0, simulation_days)
+
+# ten_lq <- rep(0, simulation_days)
+# ten_uq <- rep(0, simulation_days)
 for (k in 1:simulation_days) {
     ten_median[k] <- median(ten_simulations[, k])
-    ten_lq[k] <- quantile(ten_simulations[, k])[2]
-    ten_uq[k] <- quantile(ten_simulations[, k])[4]
-}
+    cautious_median[k] <- median(cautious_ten_sim[, k])
+    rand_median[k] <- median(rand_ten_sim[, k])
+#     ten_lq[k] <- quantile(ten_simulations[, k])[2]
+#     ten_uq[k] <- quantile(ten_simulations[, k])[4]
+ }
 
-plot(1:simulation_days, ten_median/ten_median, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0, 5), col = 1, cex = 10)
-lines(ten_lq / ten_median, col = 2)
-lines(ten_uq / ten_median, col = 3)
+#CTS GRAPH- do we want this
+# plot(1:simulation_days, ten_median/ten_median, type="l", xlab = "days", ylab = "Daily Infections per 100 000 people", ylim = c(0, 5), col = 1, cex = 10)
+# lines(ten_lq / ten_median, col = 2)
+# lines(ten_uq / ten_median, col = 3)
 
 #legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
 #points(day_max_daily, max_daily_scaled, pch = 19, col = 1)
 #text(day_max_daily, max_daily_scaled, labels = paste("(", day_max_daily, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5)
 
 plot_simulation_peaks(value_of_peak, day_of_peak)
+
+#day 10, 20 30 etc. of ten_simulations
+#ten_simulations[,seq(10,160,10)]
+
+#10 medians for day 10, 10 medians for day 20 etc
+#ten_median[rep(seq(10,160,10),each = 10)]
+
+standardised_ten_sim <- ten_simulations[,seq(10,160,10)] / ten_median[rep(seq(10,160,10),each = 10)]
+standardised_cautious_ten_sim <- cautious_ten_sim[,seq(10,160,10)] / cautious_median[rep(seq(10,160,10),each = 10)]
+standardised_rand_ten_sim <- rand_ten_sim[,seq(10,160,10)] / rand_median[rep(seq(10,160,10),each = 10)]
+boxplot(standardised_ten_sim, main = "Variation in total infections over 10 simulations, each 10 days, \n for the whole population", xlab = "Day", names = seq(10,160,10))
+boxplot(standardised_cautious_ten_sim, main = "Variation in total infections over 10 simulations, each 10 days,\n for the cautious 10% of the population", xlab = "Day", names = seq(10,160,10))
+boxplot(standardised_rand_ten_sim, main = "Variation in total infections over 10 simulations, each 10 days,\n for the random sample of 0.1% of the population", xlab = "Day", names = seq(10,160,10))
