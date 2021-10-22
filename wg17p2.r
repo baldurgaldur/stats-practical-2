@@ -1,6 +1,19 @@
 # 17 Ava Napper, Baldur Björnsson, Madeleine Reid
 # https://github.com/baldurgaldur/stats-practical-2
 
+# A model simulating Covid-19 infections over m days, n times.
+# Valid states are the following:
+# 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
+# The model monitors 3 samples of the population: the whole population, a cautious 10% of
+# the population and a random 0.1% of the population.
+# The model plots the trajectories of the total daily infections and the new daily infections,
+# and marks the maximum values of these plots.
+# Boxplots are generated to look at the variability of the n simulations.
+# A boxplot of the ratio for average total infections between the whole population and 
+# the cautious population.
+
+##Functions
+
 update_states <- function(pop_states, lambda, p_leaving_infected, p_leaving_exposed) {
     #Purpose:   To update the state of each individual after the model has
     #           run for 1 day
@@ -140,8 +153,9 @@ plot_trajectory <- function(pop_size, cautious_pop_size, rand_pop_size, state_in
 }   
 
 ## Constants
+
 # The sizes of the 3 population samples we will consider
-pop_size <- 100000
+pop_size <- 5500000
 cautious_pop_size <- pop_size / 10
 rand_pop_size <- pop_size / 1000
 
@@ -155,23 +169,28 @@ p_leaving_exposed <- 1 / 3
 
 # Find the lowest 10% of betas and the indicies of the corresponding people
 ordered_beta <- sort(beta_prob)
-cautious_beta <- ordered_beta[c(1: pop_size / 10)]
+cautious_beta <- ordered_beta[c(1: cautious_pop_size)]
 cautious_index <- match(cautious_beta, beta_prob)
 
 # Find the cut off beta value
 # because we only want people with betas lower than this value
-max_beta <- ordered_beta[pop_size / 10]
+max_beta <- ordered_beta[cautious_pop_size]
 
 # Storage for total infections on each day for each of the 10 simulations
 n_sims_total <- matrix(data = 0, nrow = no_of_runs, ncol = simulation_days)
 n_sims_cautious <- matrix(data = 0, nrow = no_of_runs, ncol = simulation_days)
 n_sims_random <- matrix(data = 0, nrow = no_of_runs, ncol = simulation_days)
 
+# Each row corresponds to a run of the simulation
+# Each column corresponds to 1 of the 3 population samples
 peak_day <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
 peak_infection_value <- matrix(data = 0, nrow = no_of_runs, ncol = 3)
 
+# To store ratio of average total infections between whole population and cautious population
 total_over_cautious_ratio <- vector()
  
+## Simulation
+
 for (j in 1:no_of_runs) {
 
     # A vector of randomly ordered integers from 1 to the size of the whole population with no repeats
@@ -180,10 +199,8 @@ for (j in 1:no_of_runs) {
     # Each row in population_states represent an individual in our model
     # Column 1(state):  The state the individual is in, ividuals all start
     #                   with 0 except 10 randomly chosen.
-    # Column 2(beta):    The beta values we generated earlier
-    # Column 3(rand):    [population size] randomly ordered integers
-    # Valid states are the following:
-    # 0:= Susceptible, 1:= Exposed, 2:= Infected, 3:= Removed(Recovered or dead)
+    # Column 2(beta):   The beta values we generated earlier
+    # Column 3(rand):   [population size] randomly ordered integers
     pop_states <- data.frame(state = rep(0, pop_size), beta = beta_prob, rand = random )
 
     # Choose 10 random people to be exposed
@@ -191,10 +208,9 @@ for (j in 1:no_of_runs) {
     pop_states[starting_exposed, "state"] <- 1
 
     # Create matrix for each of the 3 population samples.
-    # The matrix keeps track of how many people are infected each day,
-    # how many are susceptible each day and how many _get_ infected each day.
-    # Each row in state_info_total is the difference how many individuals
-    # were in that state between the start of the day and the end of the day.
+    # The matrix keeps track of how many people how many are susceptible each day,
+    # how many are in the removed state each day, how many new infections each day,
+    # and how many infected individuals there are in total.
     state_info_total <- matrix(data = 0, nrow = simulation_days, ncol = 4)
     state_info_cautious <- matrix(data = 0, nrow = simulation_days, ncol = 4)
     state_info_random <- matrix(data = 0, nrow = simulation_days, ncol = 4)
@@ -242,12 +258,13 @@ for (j in 1:no_of_runs) {
     peak_day[j, 3] <- max_day(state_info_random[, 4])
 }
     
-
+# Plots the total infections for each population
 plot_trajectory(pop_size, cautious_pop_size, rand_pop_size, state_info_total[, 4], state_info_cautious[, 4], state_info_random[, 4], "Total Daily Infection Trajectory")
+# Plots the new infections for each population
 plot_trajectory(pop_size, cautious_pop_size, rand_pop_size, state_info_total[, 3], state_info_cautious[, 3], state_info_random[, 3], "New Daily Infection Trajectory")
 
 
-# Vector to store median of each day for the n simulations
+# Vector to store median of each day for the n simulations.
 # One for each population
 ten_median <- rep(0, simulation_days)
 cautious_median <- rep(0, simulation_days)
@@ -271,27 +288,26 @@ boxplot(standardised_n_sims, main = "Variation in total infections over 10 simul
 boxplot(standardised_n_sims_cautious, main = "Variation in total infections over 10 simulations, each 10 days,\n for the cautious 10% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
 boxplot(standardised_n_sims_random, main = "Variation in total infections over 10 simulations, each 10 days,\n for the random sample of 0.1% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
 
-#write a couple of lines on what the implications of these results might be for interpreting
-#daily infection trajectories reconstructed using the ZOE app data
+# Comments on the implications of these results for interpreting
+# daily infection trajectories reconstructed using the ZOE app data.
 # Possible points:
   # Appears to be higher number of cases in whole pop compared with cautious pop (at peak approx double)
   # Variation at start of model for cautious is larger than whole pop?
   # Likely to be many more (max double) numbers of real cases than the ZOE app would predict
   # ZOE data not representative of whole pop
 
-# The difference between the infected ratio at the pandemic peak
-# between the cautious 10% and the total implies that if we had the
-# ZOE app data reporting some number of infections, those
-# people are half as likely to have Covid-19 than a randomly sampled person. 
+# The difference between the infected ratio at the pandemic peak between the cautious 10% 
+# and the total population implies that if we had an individual from the ZOE app data 
+# they are half as likely to have Covid-19 compared to the general population.
 # This highlights how obviously skewed statistical inference
 # on the general population would be using the ZOE app data.
 plot_simulation_peaks(peak_infection_value, peak_day)
 
-# Continuing with the ZOE data example, here we plot the ratio between
-# infected cautious people and infected general population.
-# This gives us some way to answer a person that comes and tells us that ZOE is now
-# reporting n number of infections, we respond by saying, well then the total population
-# has about 16.5 x n number of infections. And our confidence in the number 16.5 is 
-# highlighted by the box plot representation
+# Continuing with the ZOE data example, here we plot the ratio for
+# the average total infections between the general population and cautious sample.
+# This gives us some way to answer a person that tells us that ZOE is
+# reporting n number of infections. We respond by saying, the total population
+# has about [16.45(from boxplot) x n] number of infections. 
+# Our confidence in the number 16.5 is highlighted by the box plot representation
 boxplot(total_over_cautious_ratio, main="Ratio of total infections to cautious infections per simulation", ylab = "Average total infections / average cautious total infections")
 
