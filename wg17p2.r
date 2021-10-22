@@ -102,6 +102,43 @@ max_day <- function(states_vec) {
     avg_days_max <- sum(days_of_max) / length(days_of_max)
 }
 
+plot_trajectory <- function(pop_size, cautious_pop_size, rand_pop_size, state_info_total_vec, state_info_cautious_vec, state_info_random_vec, title){
+    # Purpose: to plot 3 lines that are standardised according to their respective population
+    # Input: the sizes of the 3 populations
+    #        the vector that we want to plot for each population
+    #        the title of the plot
+    # Output: a plot of 3 lines and points where they reach their maximum value
+
+    # Calculate the standardised maximum number of daily infections and the day
+    # on which it occurs for all three populations
+    max_daily_scaled <- round(max(standardise(pop_size, state_info_total_vec)), digits = 0)
+    max_daily_day <- max_day(state_info_total_vec)
+    
+    max_cautious_scaled <- round(max(standardise(cautious_pop_size, state_info_cautious_vec)), digits = 0)
+    max_cautious_day <- max_day(state_info_cautious_vec)
+    
+    max_rand_scaled <- round(max(standardise(rand_pop_size, state_info_random_vec)), digits = 0)
+    max_rand_day <- max_day(state_info_random_vec)
+    
+    # Plot standardised daily trajectories for each population, labeling peaks
+    plot(1:simulation_days, standardise(pop_size, state_info_total_vec), type="l",
+         xlab = "Days", ylab = "Daily Infections per 100 000 people",
+         ylim = c(0,max(max_daily_scaled, max_cautious_scaled, max_rand_scaled)+5000),
+         main = title, col = 1, cex = 10)
+    legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
+    points(max_daily_day, max_daily_scaled, pch = 19, col = 1)
+    text(max_daily_day, max_daily_scaled, labels = paste("(", max_daily_day, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5, col = 1)
+    
+    lines(standardise(cautious_pop_size, state_info_cautious_vec), col = 2)
+    points(max_cautious_day, max_cautious_scaled, pch = 19, col = 2)
+    text(max_cautious_day, max_cautious_scaled, labels = paste("(", max_cautious_day, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5, col = 2)
+    
+    lines(standardise(rand_pop_size, state_info_random_vec), col = 3)
+    points(max_rand_day, max_rand_scaled, pch = 19, col = 3,)
+    text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 0.5, col = 3)
+    
+}   
+
 ## Constants
 # The sizes of the 3 population samples we will consider
 pop_size <- 5500000
@@ -137,7 +174,6 @@ total_over_cautious_ratio <- vector()
  
 for (j in 1:no_of_runs) {
 
-    print(j)
     # A vector of randomly ordered integers from 1 to the size of the whole population with no repeats
     random <- sample(c(1:pop_size), pop_size, replace = FALSE)
 
@@ -205,38 +241,6 @@ for (j in 1:no_of_runs) {
     peak_infection_value[j, 3] <- max(state_info_random[, 4]) / rand_pop_size
     peak_day[j, 3] <- max_day(state_info_random[, 4])
 }
-
-plot_trajectory <- function(pop_size, cautious_pop_size, rand_pop_size, state_info_total_vec, state_info_cautious_vec, state_info_random_vec, title){
-
-    # Calculate the standardised maximum number of daily infections and the day
-    # on which it occurs for all three populations
-    max_daily_scaled <- round(max(standardise(pop_size, state_info_total_vec)), digits = 0)
-    max_daily_day <- max_day(state_info_total_vec)
-    
-    max_cautious_scaled <- round(max(standardise(cautious_pop_size, state_info_cautious_vec)), digits = 0)
-    max_cautious_day <- max_day(state_info_cautious_vec)
-    
-    max_rand_scaled <- round(max(standardise(rand_pop_size, state_info_random_vec)), digits = 0)
-    max_rand_day <- max_day(state_info_random_vec)
-    
-    # Plot standardised daily trajectories for each population, labeling peaks
-    plot(1:simulation_days, standardise(pop_size, state_info_total_vec), type="l",
-         xlab = "Days", ylab = "Daily Infections per 100 000 people",
-         ylim = c(0,max(max_daily_scaled, max_cautious_scaled, max_rand_scaled)+5000),
-         main = title, col = 1, cex = 10)
-    legend("topleft", legend = c("total population", "cautious population", "random 0.1%"), col = 1:3, lty = 1, cex = 0.5)
-    points(max_daily_day, max_daily_scaled, pch = 19, col = 1)
-    text(max_daily_day, max_daily_scaled, labels = paste("(", max_daily_day, ",", max_daily_scaled, ")"), pos = 4, cex = 0.5, col = 1)
-    
-    lines(standardise(cautious_pop_size, state_info_cautious_vec), col = 2)
-    points(max_cautious_day, max_cautious_scaled, pch = 19, col = 2)
-    text(max_cautious_day, max_cautious_scaled, labels = paste("(", max_cautious_day, ",", max_cautious_scaled, ")"), pos = 4, cex = 0.5, col = 2)
-    
-    lines(standardise(rand_pop_size, state_info_random_vec), col = 3)
-    points(max_rand_day, max_rand_scaled, pch = 19, col = 3,)
-    text(max_rand_day, max_rand_scaled, labels = paste("(", max_rand_day, ",", max_rand_scaled, ")"), pos = 2, cex = 0.5, col = 3)
-    
-}   
     
 
 plot_trajectory(pop_size, cautious_pop_size, rand_pop_size, state_info_total[, 4], state_info_cautious[, 4], state_info_random[, 4], "Total Daily Infection Trajectory")
@@ -255,6 +259,16 @@ for (k in 1:simulation_days) {
 
  }
 
+
+
+#write a couple of lines on what the implications of these results might be for interpreting
+#daily infection trajectories reconstructed using the ZOE app data
+# Possible points:
+  # Appears to be higher number of cases in whole pop compared with cautious pop (at peak approx double)
+  # Variation at start of model for cautious is larger than whole pop?
+  # Likely to be many more (max double) numbers of real cases than the ZOE app would predict
+  # ZOE data not representative of whole pop
+
 # The difference between the infected ratio at the pandemic peak
 # between the cautious 10% and the total implies that if we had the
 # ZOE app data reporting some number of infections, those
@@ -271,7 +285,6 @@ plot_simulation_peaks(peak_infection_value, peak_day)
 # highlighted by the box plot representation
 boxplot(total_over_cautious_ratio, main="Ratio of total infections to cautious infections per simulation", ylab = "Average total infections / average cautious total infections")
 
-
 # Works out the total infections relative to the median of the 10 simulations, at 10 day intervals
 standardised_n_sims <- n_sims_total[,seq(10,160,10)] / ten_median[rep(seq(10,160,10),each = 10)]
 standardised_n_sims_cautious <- n_sims_cautious[,seq(10,160,10)] / cautious_median[rep(seq(10,160,10),each = 10)]
@@ -280,11 +293,3 @@ standardised_n_sims_random <- n_sims_random[,seq(10,160,10)] / rand_median[rep(s
 boxplot(standardised_n_sims, main = "Variation in total infections over 10 simulations, each 10 days, \n for the whole population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
 boxplot(standardised_n_sims_cautious, main = "Variation in total infections over 10 simulations, each 10 days,\n for the cautious 10% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
 boxplot(standardised_n_sims_random, main = "Variation in total infections over 10 simulations, each 10 days,\n for the random sample of 0.1% of the population", xlab = "Day", ylab = "Total infections / median of total infections for the 10 simulations", names = seq(10,160,10))
-
-#write a couple of lines on what the implications of these results might be for interpreting
-#daily infection trajectories reconstructed using the ZOE app data
-# Possible points:
-  # Appears to be higher number of cases in whole pop compared with cautious pop (at peak approx double)
-  # Variation at start of model for cautious is larger than whole pop?
-  # Likely to be many more (max double) numbers of real cases than the ZOE app would predict
-  # ZOE data not representative of whole pop
